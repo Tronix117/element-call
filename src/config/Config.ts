@@ -14,19 +14,23 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
-import {
-  DEFAULT_CONFIG,
-  ConfigOptions,
-  ResolvedConfigOptions,
-} from "./ConfigOptions";
+import { ConfigOptions, configSchema } from "./ConfigOptions";
 
 export class Config {
   private static internalInstance: Config;
 
-  public static get(): ConfigOptions {
+  public static get(): Omit<ConfigOptions, "features"> {
     if (!this.internalInstance?.config)
       throw new Error("Config instance read before config got initialized");
     return this.internalInstance.config;
+  }
+
+  public static feature<T extends keyof ConfigOptions["features"]>(
+    featureName: T
+  ): ConfigOptions["features"][T] {
+    if (!this.internalInstance?.config)
+      throw new Error("Config instance read before config got initialized");
+    return this.internalInstance.config.features[featureName];
   }
 
   public static init(): Promise<void> {
@@ -34,12 +38,11 @@ export class Config {
       return Config.internalInstance.initPromise;
     }
     Config.internalInstance = new Config();
-    Config.internalInstance.initPromise = new Promise<void>((resolve) => {
-      downloadConfig("../config.json").then((config) => {
-        Config.internalInstance.config = { ...DEFAULT_CONFIG, ...config };
-        resolve();
-      });
-    });
+    Config.internalInstance.initPromise = downloadConfig("../config.json").then(
+      (config) => {
+        Config.internalInstance.config = configSchema.parse(config ?? {});
+      }
+    );
     return Config.internalInstance.initPromise;
   }
 
@@ -52,13 +55,13 @@ export class Config {
     return Config.get().default_server_config["m.homeserver"].server_name;
   }
 
-  public config?: ResolvedConfigOptions;
+  public config?: ConfigOptions;
   private initPromise?: Promise<void>;
 }
 
 async function downloadConfig(
   configJsonFilename: string
-): Promise<ConfigOptions> {
+): Promise<ConfigOptions | null> {
   const url = new URL(configJsonFilename, window.location.href);
   url.searchParams.set("cachebuster", Date.now().toString());
   const res = await fetch(url, {
@@ -70,7 +73,7 @@ async function downloadConfig(
     // Lack of a config isn't an error, we should just use the defaults.
     // Also treat a blank config as no config, assuming the status code is 0, because we don't get 404s from file:
     // URIs so this is the only way we can not fail if the file doesn't exist when loading from a file:// URI.
-    return DEFAULT_CONFIG;
+    return null;
   }
 
   return res.json();

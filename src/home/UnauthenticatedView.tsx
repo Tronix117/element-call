@@ -41,6 +41,7 @@ import commonStyles from "./common.module.css";
 import { generateRandomName } from "../auth/generateRandomName";
 import { useOptInAnalytics } from "../settings/useSetting";
 import { optInDescription } from "../analytics/AnalyticsOptInDescription";
+import { Config } from "../config/Config";
 
 export const UnauthenticatedView: FC = () => {
   const { setClient } = useClient();
@@ -155,15 +156,17 @@ export const UnauthenticatedView: FC = () => {
                 autoComplete="off"
               />
             </FieldRow>
-            <InputField
-              id="optInAnalytics"
-              type="checkbox"
-              checked={optInAnalytics}
-              description={optInDescription()}
-              onChange={(event: React.ChangeEvent<HTMLInputElement>) =>
-                setOptInAnalytics(event.target.checked)
-              }
-            />
+            {Config.feature("analytics") && (
+              <InputField
+                id="optInAnalytics"
+                type="checkbox"
+                checked={optInAnalytics}
+                description={optInDescription()}
+                onChange={(event: React.ChangeEvent<HTMLInputElement>) =>
+                  setOptInAnalytics(event.target.checked)
+                }
+              />
+            )}
             <Caption>
               <Trans>
                 By clicking "Go", you agree to our{" "}

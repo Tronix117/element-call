@@ -44,6 +44,7 @@ import { Form } from "../form/Form";
 import { CallType, CallTypeDropdown } from "./CallTypeDropdown";
 import { useOptInAnalytics } from "../settings/useSetting";
 import { optInDescription } from "../analytics/AnalyticsOptInDescription";
+import { Config } from "../config/Config";
 
 interface Props {
   client: MatrixClient;
@@ -144,15 +145,17 @@ export function RegisteredView({ client, isPasswordlessUser }: Props) {
                 {loading ? t("Loading…") : t("Go")}
               </Button>
             </FieldRow>
-            <InputField
-              id="optInAnalytics"
-              type="checkbox"
-              checked={optInAnalytics}
-              description={optInDescription()}
-              onChange={(event: React.ChangeEvent<HTMLInputElement>) =>
-                setOptInAnalytics(event.target.checked)
-              }
-            />
+            {Config.feature("analytics") && (
+              <InputField
+                id="optInAnalytics"
+                type="checkbox"
+                checked={optInAnalytics}
+                description={optInDescription()}
+                onChange={(event: React.ChangeEvent<HTMLInputElement>) =>
+                  setOptInAnalytics(event.target.checked)
+                }
+              />
+            )}
             {error && (
               <FieldRow className={styles.fieldRow}>
                 <ErrorMessage error={error} />

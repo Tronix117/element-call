@@ -96,7 +96,7 @@ export class PosthogAnalytics {
   // set true during the constructor if posthog config is present, otherwise false
   private static internalInstance: PosthogAnalytics | null = null;
 
-  private identificationPromise: Promise<void>;
+  private identificationPromise: Promise<void> | null = null;
   private readonly enabled: boolean = false;
   private anonymity = Anonymity.Disabled;
   private platformSuperProperties = {};
@@ -110,12 +110,14 @@ export class PosthogAnalytics {
   }
 
   constructor(private readonly posthog: PostHog) {
-    const posthogConfig: PosthogSettings = {
-      project_api_key: Config.get().posthog?.api_key,
-      api_host: Config.get().posthog?.api_host,
-    };
+    const posthogConfig: PosthogSettings | null =
+      Config.feature("analytics")?.posthog ?? null;
 
-    if (posthogConfig.project_api_key && posthogConfig.api_host) {
+    if (
+      posthogConfig &&
+      posthogConfig.project_api_key &&
+      posthogConfig.api_host
+    ) {
       if (
         PosthogAnalytics.getPlatformProperties().matrixBackend === "embedded"
       ) {
@@ -248,7 +250,7 @@ export class PosthogAnalytics {
       } catch (e) {
         // The above could fail due to network requests, but not essential to starting the application,
         // so swallow it.
-        logger.log("Unable to identify user for tracking" + e.toString());
+        logger.log(`Unable to identify user for tracking ${e}`);
       }
       if (analyticsID) {
         this.posthog.identify(analyticsID);

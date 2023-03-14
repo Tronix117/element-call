@@ -118,7 +118,7 @@ export function OverflowMenu({
               <SettingsIcon />
               <span>{t("Settings")}</span>
             </Item>
-            {Config.get().rageshake?.submit_url && (
+            {Config.feature("analytics")?.rageshake?.submit_url && (
               <Item key="feedback" textValue={t("Submit feedback")}>
                 <FeedbackIcon />
                 <span>{t("Submit feedback")}</span>

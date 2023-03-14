@@ -4,5 +4,8 @@
       "base_url": "https://call.ems.host",
       "server_name": "call.ems.host"
     }
+  },
+  "features": {
+    "feature_analytics": true
   }
 }

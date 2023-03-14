@@ -111,21 +111,25 @@ export function CrashView() {
   }, []);
 
   let logsComponent: JSX.Element | null = null;
-  if (sent) {
-    logsComponent = <div>{t("Thanks! We'll get right on it.")}</div>;
-  } else if (sending) {
-    logsComponent = <div>{t("Sending…")}</div>;
-  } else if (Config.get().rageshake?.submit_url) {
-    logsComponent = (
-      <Button
-        size="lg"
-        variant="default"
-        onPress={sendDebugLogs}
-        className={styles.wideButton}
-      >
-        {t("Send debug logs")}
-      </Button>
-    );
+
+  const analyticsConfig = Config.feature("analytics");
+  if (analyticsConfig) {
+    if (sent) {
+      logsComponent = <div>{t("Thanks! We'll get right on it.")}</div>;
+    } else if (sending) {
+      logsComponent = <div>{t("Sending…")}</div>;
+    } else if (analyticsConfig.rageshake?.submit_url) {
+      logsComponent = (
+        <Button
+          size="lg"
+          variant="default"
+          onPress={sendDebugLogs}
+          className={styles.wideButton}
+        >
+          {t("Send debug logs")}
+        </Button>
+      );
+    }
   }
 
   return (
@@ -133,15 +137,21 @@ export function CrashView() {
       <Trans>
         <h1>Oops, something's gone wrong.</h1>
       </Trans>
-      {Config.get().rageshake?.submit_url && (
-        <Trans>
-          <p>Submitting debug logs will help us track down the problem.</p>
-        </Trans>
-      )}
+      {logsComponent && (
+        <>
+          {analyticsConfig?.rageshake?.submit_url && (
+            <Trans>
+              <p>Submitting debug logs will help us track down the problem.</p>
+            </Trans>
+          )}
 
-      <div className={styles.sendLogsSection}>{logsComponent}</div>
-      {error && (
-        <ErrorMessage error={translatedError("Couldn't send debug logs!", t)} />
+          <div className={styles.sendLogsSection}>{logsComponent}</div>
+          {error && (
+            <ErrorMessage
+              error={translatedError("Couldn't send debug logs!", t)}
+            />
+          )}
+        </>
       )}
       <Button
         size="lg"

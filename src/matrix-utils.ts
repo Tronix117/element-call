@@ -87,15 +87,16 @@ export async function initClient(
 ): Promise<MatrixClient> {
   await loadOlm();
 
-  let indexedDB: IDBFactory;
+  let indexedDB: IDBFactory | null = null;
   try {
     indexedDB = window.indexedDB;
   } catch (e) {}
 
   const baseOpts = {
     fallbackICEServerAllowed: fallbackICEServerAllowed,
-    isVoipWithNoMediaAllowed:
-      Config.get().features?.feature_group_calls_without_video_and_audio,
+    isVoipWithNoMediaAllowed: Config.feature(
+      "group_calls_without_video_and_audio"
+    ),
   } as ICreateClientOpts;
 
   if (indexedDB && localStorage) {

@@ -191,10 +191,11 @@ export class Initializer {
       this.loadStates.sentry === LoadState.None &&
       this.loadStates.config === LoadState.Loaded
     ) {
-      if (Config.get().sentry?.DSN && Config.get().sentry?.environment) {
+      const sentryConfig = Config.feature("analytics")?.sentry;
+      if (sentryConfig?.DSN && sentryConfig?.environment) {
         Sentry.init({
-          dsn: Config.get().sentry?.DSN,
-          environment: Config.get().sentry?.environment,
+          dsn: sentryConfig?.DSN,
+          environment: sentryConfig?.environment,
           integrations: [
             new Integrations.BrowserTracing({
               routingInstrumentation:
@@ -214,5 +215,5 @@ export class Initializer {
       resolve();
     }
   }
-  private initPromise: Promise<void> | null;
+  private initPromise: Promise<void> | null = null;
 }

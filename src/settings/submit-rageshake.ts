@@ -53,7 +53,8 @@ export function useSubmitRageshake(): {
 
   const submitRageshake = useCallback(
     async (opts) => {
-      if (!Config.get().rageshake?.submit_url) {
+      const rageshakeConfig = Config.feature("analytics")?.rageshake;
+      if (!rageshakeConfig?.submit_url) {
         throw new Error("No rageshake URL is configured");
       }
 
@@ -261,7 +262,7 @@ export function useSubmitRageshake(): {
           );
         }
 
-        await fetch(Config.get().rageshake?.submit_url, {
+        await fetch(rageshakeConfig.submit_url, {
           method: "POST",
           body,
         });

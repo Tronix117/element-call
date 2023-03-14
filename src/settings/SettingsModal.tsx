@@ -41,6 +41,7 @@ import { Button } from "../button";
 import { useDownloadDebugLog } from "./submit-rageshake";
 import { Body } from "../typography/Typography";
 import { optInDescription } from "../analytics/AnalyticsOptInDescription";
+import { Config } from "../config/Config";
 
 interface Props {
   isOpen: boolean;
@@ -181,32 +182,38 @@ export const SettingsModal = (props: Props) => {
               }
             />
           </FieldRow>
-          <h4>Analytics</h4>
-          <FieldRow>
-            <InputField
-              id="optInAnalytics"
-              type="checkbox"
-              checked={optInAnalytics}
-              description={optInDescription()}
-              onChange={(event: React.ChangeEvent<HTMLInputElement>) =>
-                setOptInAnalytics(event.target.checked)
-              }
-            />
-          </FieldRow>
-          <FieldRow>
-            <InputField
-              id="developerSettingsTab"
-              type="checkbox"
-              checked={developerSettingsTab}
-              label={t("Developer Settings")}
-              description={t(
-                "Expose developer settings in the settings window."
-              )}
-              onChange={(event: React.ChangeEvent<HTMLInputElement>) =>
-                setDeveloperSettingsTab(event.target.checked)
-              }
-            />
-          </FieldRow>
+          {Config.feature("analytics") && (
+            <>
+              <h4>Analytics</h4>
+              <FieldRow>
+                <InputField
+                  id="optInAnalytics"
+                  type="checkbox"
+                  checked={optInAnalytics}
+                  description={optInDescription()}
+                  onChange={(event: React.ChangeEvent<HTMLInputElement>) =>
+                    setOptInAnalytics(event.target.checked)
+                  }
+                />
+              </FieldRow>
+            </>
+          )}
+          {Config.feature("developer") && (
+            <FieldRow>
+              <InputField
+                id="developerSettingsTab"
+                type="checkbox"
+                checked={developerSettingsTab}
+                label={t("Developer Settings")}
+                description={t(
+                  "Expose developer settings in the settings window."
+                )}
+                onChange={(event: React.ChangeEvent<HTMLInputElement>) =>
+                  setDeveloperSettingsTab(event.target.checked)
+                }
+              />
+            </FieldRow>
+          )}
         </TabItem>
         {developerSettingsTab && (
           <TabItem

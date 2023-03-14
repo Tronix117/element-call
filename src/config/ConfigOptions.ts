@@ -13,63 +13,87 @@ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 See the License for the specific language governing permissions and
 limitations under the License.
 */
+import z from "zod";
 
-export interface ConfigOptions {
-  /**
-   * The Posthog endpoint to which analytics data will be sent.
-   */
-  posthog?: {
-    api_key: string;
-    api_host: string;
-  };
-  /**
-   * The Sentry endpoint to which crash data will be sent.
-   */
-  sentry?: {
-    DSN: string;
-    environment: string;
-  };
-  /**
-   * The rageshake server to which feedback and debug logs will be sent.
-   */
-  rageshake?: {
-    submit_url: string;
-  };
+/**
+ * Old configuration compatibility
+ * @deprecated should be removed on next major release
+ */
+import { handleDeprecatedConfig } from "./DeprecatedConfigOptions";
 
-  // Describes the default homeserver to use. The same format as Element Web
-  // (without identity servers as we don't use them).
-  default_server_config?: {
-    ["m.homeserver"]: {
-      base_url: string;
-      server_name: string;
-    };
-  };
+export const configSchema = z.preprocess(
+  handleDeprecatedConfig,
+  z.object({
+    // Describes the default homeserver to use. The same format as Element Web
+    // (without identity servers as we don't use them).
+    default_server_config: z.object({
+      ["m.homeserver"]: z
+        .object({
+          base_url: z.string(),
+          server_name: z.string(),
+        })
+        .default({
+          base_url: "http://localhost:8008",
+          server_name: "localhost",
+        }),
+    }),
 
-  /**
-   * Allow to join a group calls without audio and video.
-   * TEMPORARY: Is a feature that's not proved and experimental
-   */
-  features?: {
-    feature_group_calls_without_video_and_audio: boolean;
-  };
-}
+    /**
+     * Features configuration, unset or false to disable
+     */
+    features: z
+      .object({
+        /** Allow to join a group calls without audio and video.
+         * TEMPORARY: Is a feature that's not proved and experimental
+         */
+        group_calls_without_video_and_audio: z.boolean().default(false),
 
-// Overrides members from ConfigOptions that are always provided by the
-// default config and are therefore non-optional.
-export interface ResolvedConfigOptions extends ConfigOptions {
-  default_server_config: {
-    ["m.homeserver"]: {
-      base_url: string;
-      server_name: string;
-    };
-  };
-}
+        /** Enable developer features */
+        developer: z.boolean().default(false),
 
-export const DEFAULT_CONFIG: ResolvedConfigOptions = {
-  default_server_config: {
-    ["m.homeserver"]: {
-      base_url: "http://localhost:8008",
-      server_name: "localhost",
-    },
-  },
-};
+        analytics: z.preprocess(
+          // Allow false as a conveniant way of disabling the feature
+          (d) => (d === false ? null : d),
+          z
+            .null()
+            .or(
+              z.object({
+                /**
+                 * The Posthog endpoint to which analytics data will be sent.
+                 */
+                posthog: z
+                  .object({
+                    project_api_key: z.string(),
+                    api_host: z.string(),
+                  })
+                  .passthrough()
+                  .optional(),
+
+                /**
+                 * The Sentry endpoint to which crash data will be sent.
+                 */
+                sentry: z
+                  .object({
+                    DSN: z.string(),
+                    environment: z.string(),
+                  })
+                  .optional(),
+
+                /**
+                 * The rageshake server to which feedback and debug logs will be sent.
+                 */
+                rageshake: z
+                  .object({
+                    submit_url: z.string(),
+                  })
+                  .optional(),
+              })
+            )
+            .default(null)
+        ),
+      })
+      .default({}),
+  })
+);
+
+export type ConfigOptions = z.infer<typeof configSchema>;
